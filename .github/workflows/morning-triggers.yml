@@ -1,4 +1,4 @@
-name: Morning Run for Other Repos
+name: Morning runs to Other Repos
 
 on:
   schedule:
@@ -9,6 +9,9 @@ jobs:
   trigger-workflows:
     runs-on: ubuntu-latest
     steps:
+      - name: Install jq (if not installed)
+        run: sudo apt-get install jq -y
+
       - name: Trigger RepoB Workflow and Get URL
         id: trigger_repo_b
         run: |
@@ -29,13 +32,30 @@ jobs:
 
           echo "RepoB workflow triggered successfully. Fetching run details..."
 
-          # Wait for a few seconds to allow GitHub to start the workflow
-          sleep 5
+          # Wait for GitHub to start the workflow
+          max_attempts=10
+          attempt=1
+          run_url=""
 
-          # Fetch the latest workflow run
-          run_url=$(curl -s -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
-            "https://api.github.com/repos/$repo/actions/runs?branch=develop&status=in_progress" \
-            | jq -r '.workflow_runs[0].html_url')
+          while [ -z "$run_url" ] && [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt to fetch the workflow run URL..."
+            run_url=$(curl -s -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
+              "https://api.github.com/repos/$repo/actions/runs?branch=develop&status=in_progress" \
+              | jq -r '.workflow_runs[0].html_url')
+
+            if [ "$run_url" != "null" ] && [ -n "$run_url" ]; then
+              break
+            fi
+
+            echo "Run URL not found, retrying in 5 seconds..."
+            sleep 5
+            ((attempt++))
+          done
+
+          if [ -z "$run_url" ] || [ "$run_url" == "null" ]; then
+            echo "Failed to fetch RepoB workflow run URL after $max_attempts attempts."
+            exit 1
+          fi
 
           echo "RepoB Workflow URL: $run_url"
           echo "repo_b_url=$run_url" >> "$GITHUB_ENV"
@@ -60,13 +80,30 @@ jobs:
 
           echo "RepoC workflow triggered successfully. Fetching run details..."
 
-          # Wait for a few seconds to allow GitHub to start the workflow
-          sleep 5
+          # Wait for GitHub to start the workflow
+          max_attempts=10
+          attempt=1
+          run_url=""
 
-          # Fetch the latest workflow run
-          run_url=$(curl -s -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
-            "https://api.github.com/repos/$repo/actions/runs?branch=develop&status=in_progress" \
-            | jq -r '.workflow_runs[0].html_url')
+          while [ -z "$run_url" ] && [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt to fetch the workflow run URL..."
+            run_url=$(curl -s -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
+              "https://api.github.com/repos/$repo/actions/runs?branch=develop&status=in_progress" \
+              | jq -r '.workflow_runs[0].html_url')
+
+            if [ "$run_url" != "null" ] && [ -n "$run_url" ]; then
+              break
+            fi
+
+            echo "Run URL not found, retrying in 5 seconds..."
+            sleep 5
+            ((attempt++))
+          done
+
+          if [ -z "$run_url" ] || [ "$run_url" == "null" ]; then
+            echo "Failed to fetch RepoC workflow run URL after $max_attempts attempts."
+            exit 1
+          fi
 
           echo "RepoC Workflow URL: $run_url"
           echo "repo_c_url=$run_url" >> "$GITHUB_ENV"
