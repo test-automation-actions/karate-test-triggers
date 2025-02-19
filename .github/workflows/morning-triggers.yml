@@ -1,4 +1,4 @@
-name: Dispatch Event to Other Repos
+name: Morning Run to Other Repos
 
 on:
   schedule:
