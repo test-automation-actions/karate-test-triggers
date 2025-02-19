@@ -1,4 +1,4 @@
-name: Morning runs to Other Repos
+name: Dispatch Event to Other Repos
 
 on:
   schedule:
@@ -9,106 +9,33 @@ jobs:
   trigger-workflows:
     runs-on: ubuntu-latest
     steps:
-      - name: Install jq (if not installed)
-        run: sudo apt-get install jq -y
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Trigger RepoB Workflow and Get URL
-        id: trigger_repo_b
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      - name: Trigger Workflows and Fetch URLs
+        id: trigger_workflows
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
-          repo="test-automation-actions/karate-test-demo"
-          workflow_id="test-execution.yml"
-
-          # Trigger the workflow
-          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
-            https://api.github.com/repos/$repo/actions/workflows/$workflow_id/dispatches \
-            -d '{"ref":"develop"}')
-
-          if [ "$response" -ne 204 ]; then
-            echo "Failed to trigger RepoB workflow (Status: $response)"
-            exit 1
-          fi
-
-          echo "RepoB workflow triggered successfully. Fetching run details..."
-
-          # Wait for GitHub to start the workflow
-          max_attempts=10
-          attempt=1
-          run_url=""
-
-          while [ -z "$run_url" ] && [ $attempt -le $max_attempts ]; do
-            echo "Attempt $attempt to fetch the workflow run URL..."
-            run_url=$(curl -s -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
-              "https://api.github.com/repos/$repo/actions/runs?branch=develop&status=in_progress" \
-              | jq -r '.workflow_runs[0].html_url')
-
-            if [ "$run_url" != "null" ] && [ -n "$run_url" ]; then
-              break
-            fi
-
-            echo "Run URL not found, retrying in 5 seconds..."
-            sleep 5
-            ((attempt++))
-          done
-
-          if [ -z "$run_url" ] || [ "$run_url" == "null" ]; then
-            echo "Failed to fetch RepoB workflow run URL after $max_attempts attempts."
-            exit 1
-          fi
-
-          echo "RepoB Workflow URL: $run_url"
-          echo "repo_b_url=$run_url" >> "$GITHUB_ENV"
-
-      - name: Trigger RepoC Workflow and Get URL
-        id: trigger_repo_c
-        run: |
-          repo="test-automation-actions/karate-test-demo-1"
-          workflow_id="test-execution.yml"
-
-          # Trigger the workflow
-          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
-            https://api.github.com/repos/$repo/actions/workflows/$workflow_id/dispatches \
-            -d '{"ref":"develop"}')
-
-          if [ "$response" -ne 204 ]; then
-            echo "Failed to trigger RepoC workflow (Status: $response)"
-            exit 1
-          fi
-
-          echo "RepoC workflow triggered successfully. Fetching run details..."
-
-          # Wait for GitHub to start the workflow
-          max_attempts=10
-          attempt=1
-          run_url=""
-
-          while [ -z "$run_url" ] && [ $attempt -le $max_attempts ]; do
-            echo "Attempt $attempt to fetch the workflow run URL..."
-            run_url=$(curl -s -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
-              "https://api.github.com/repos/$repo/actions/runs?branch=develop&status=in_progress" \
-              | jq -r '.workflow_runs[0].html_url')
-
-            if [ "$run_url" != "null" ] && [ -n "$run_url" ]; then
-              break
-            fi
-
-            echo "Run URL not found, retrying in 5 seconds..."
-            sleep 5
-            ((attempt++))
-          done
-
-          if [ -z "$run_url" ] || [ "$run_url" == "null" ]; then
-            echo "Failed to fetch RepoC workflow run URL after $max_attempts attempts."
-            exit 1
-          fi
-
-          echo "RepoC Workflow URL: $run_url"
-          echo "repo_c_url=$run_url" >> "$GITHUB_ENV"
+          python .github/scripts/trigger_workflows.py \
+            --repo test-automation-actions/karate-test-demo \
+            --workflow test-execution.yml \
+            --branch develop
+            
+          python .github/scripts/trigger_workflows.py \
+            --repo test-automation-actions/karate-test-demo-1 \
+            --workflow test-execution.yml \
+            --branch develop
 
       - name: Display Triggered Workflow URLs
         run: |
-          echo "RepoB Workflow URL: $repo_b_url"
-          echo "RepoC Workflow URL: $repo_c_url"
+          echo "RepoB Workflow URL: ${{ steps.trigger_workflows.outputs.repo_b_url }}"
+          echo "RepoC Workflow URL: ${{ steps.trigger_workflows.outputs.repo_c_url }}"
