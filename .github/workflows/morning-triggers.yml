@@ -28,4 +28,4 @@ jobs:
 
       - name: Display Triggered Workflow URLs
         run: |
-          echo "RepoB Workflow URL: ${{ env.karate-test-demo_URL }}"
+          echo "RepoB Workflow URL: ${{ env.KARATE-TEST-DEMO_URL }}"
