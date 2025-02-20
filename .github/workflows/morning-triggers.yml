@@ -24,8 +24,12 @@ jobs:
         id: trigger_workflows
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-        run: python .github/workflows/scripts/trigger_workflows.py --repo "test-automation-actions/karate-test-demo" --workflow "test-execution.yml" --branch "develop"
+        run: |
+          python .github/workflows/scripts/trigger_workflows.py --repo "test-automation-actions/karate-test-demo" --workflow "test-execution.yml" --branch "develop"
+          python .github/workflows/scripts/trigger_workflows.py --repo "test-automation-actions/karate-test-demo-1" --workflow "test-execution.yml" --branch "develop"
+
 
       - name: Display Triggered Workflow URLs
         run: |
-          echo "RepoB Workflow URL: ${{ env.KARATE_TEST_DEMO_URL }}"
+          echo "KARATE_TEST_DEMO Workflow URL: ${{ env.KARATE_TEST_DEMO_URL }}"
+          echo "KARATE_TEST_DEMO_1 Workflow URL: ${{ env.KARATE_TEST_DEMO_1_URL }}"
