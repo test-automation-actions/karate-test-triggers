@@ -24,14 +24,13 @@ jobs:
         id: trigger_workflows
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-        run: python .github/workflows/scripts/trigger_workflows.py --repo "test-automation-actions/karate-test-demo" --workflow "test-execution.yml" --branch "develop"
-            
-          # python .github/scripts/trigger_workflows.py \
-          #   --repo test-automation-actions/karate-test-demo-1 \
-          #   --workflow test-execution.yml \
-          #   --branch develop
+        run: |
+          echo "Triggering RepoB Workflow..."
+          repo_b_url=$(python .github/workflows/scripts/trigger_workflows.py --repo "test-automation-actions/karate-test-demo" --workflow "test-execution.yml" --branch "develop")
+          
+          echo "repo_b_url=$repo_b_url" >> "$GITHUB_ENV"
+          echo "repo_b_url=$repo_b_url" >> "$GITHUB_OUTPUT"
 
       - name: Display Triggered Workflow URLs
         run: |
-          echo "RepoB Workflow URL: ${{ steps.trigger_workflows.outputs.repo_b_url }}"
-          echo "RepoC Workflow URL: ${{ steps.trigger_workflows.outputs.repo_c_url }}"
+          echo "RepoB Workflow URL: ${{ env.repo_b_url }}"
