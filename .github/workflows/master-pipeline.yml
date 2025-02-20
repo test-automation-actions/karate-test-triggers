@@ -31,7 +31,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
-          python .github/workflows/scripts/trigger_workflows_name.py --repo "test-automation-actions/karate-test-demo" --workflow "child-pipeline.yml" --branch "develop" --workflow-name "${{ env.WORKFLOW_NAME }}"
+          python .github/workflows/scripts/trigger_workflows_name.py --repo "test-automation-actions/karate-test-demo" --workflow "child-workflow.yml" --branch "develop" --workflow-name "${{ env.WORKFLOW_NAME }}"
 
       - name: Display Triggered Workflow URLs
         run: |
