@@ -26,12 +26,21 @@ jobs:
       - name: Install Dependencies
         run: pip install requests
 
-      - name: Trigger Workflows and Fetch URLs
-        id: trigger_workflows
+      - name: Trigger Workflows with Tags and Fetch URLs
+        id: trigger_workflows_with_tags
+        if: ${{ github.event.inputs.tags != '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           python .github/workflows/scripts/trigger_workflows.py --repo "test-automation-actions/karate-test-demo" --workflow "test-execution.yml" --branch "feature/test-inputs" --tags ${{ github.event.inputs.tags }}
+
+      - name: Trigger Workflows and Fetch URLs
+        id: trigger_workflows
+        if: ${{ github.event.inputs.tags == '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          python .github/workflows/scripts/trigger_workflows.py --repo "test-automation-actions/karate-test-demo" --workflow "test-execution.yml" --branch "feature/test-inputs"
 
       - name: Display Triggered Workflow URLs
         run: |
