@@ -56,7 +56,7 @@ def main():
     parser.add_argument("--repo", required=True, help="GitHub repository (e.g., user/repo-name)")
     parser.add_argument("--workflow", required=True, help="Workflow file name (e.g., test-execution.yml)")
     parser.add_argument("--branch", required=True, help="Branch or reference to trigger (e.g., develop)")
-    parser.add_argument("--tags", required=True, help="Tags to execute (e.g., @api)")
+    parser.add_argument("--tags", required=False, help="Tags to execute (e.g., @api)")
 
     args = parser.parse_args()
 
