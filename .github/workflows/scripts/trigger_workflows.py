@@ -20,7 +20,9 @@ def trigger_workflow(repo, workflow, branch, tags):
     # Data payload
     payload = {
         "ref": branch,  # Branch to run the workflow
-        "tags": tags
+        "inputs": {
+            "tags": tags       
+        }
     }
     response = requests.post(url, headers=HEADERS, json=payload)
 
