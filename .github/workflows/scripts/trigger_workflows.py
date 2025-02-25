@@ -14,10 +14,15 @@ HEADERS = {
 }
 
 
-def trigger_workflow(repo, workflow, branch):
+def trigger_workflow(repo, workflow, branch, tags):
     """Triggers a workflow dispatch event for the given repository."""
     url = f"{GITHUB_API_URL}/repos/{repo}/actions/workflows/{workflow}/dispatches"
-    response = requests.post(url, headers=HEADERS, json={"ref": branch})
+    # Data payload
+    payload = {
+        "ref": branch,  # Branch to run the workflow
+        "tags": tags
+    }
+    response = requests.post(url, headers=HEADERS, json=payload)
 
     if response.status_code == 204:
         print(f"✅ Successfully triggered workflow for {repo} on branch {branch}.")
@@ -51,12 +56,13 @@ def main():
     parser.add_argument("--repo", required=True, help="GitHub repository (e.g., user/repo-name)")
     parser.add_argument("--workflow", required=True, help="Workflow file name (e.g., test-execution.yml)")
     parser.add_argument("--branch", required=True, help="Branch or reference to trigger (e.g., develop)")
+    parser.add_argument("--tags", required=True, help="Tags to execute (e.g., @api)")
 
     args = parser.parse_args()
 
-    repo, workflow, branch = args.repo, args.workflow, args.branch
+    repo, workflow, branch, tags = args.repo, args.workflow, args.branch, args.tags
 
-    if trigger_workflow(repo, workflow, branch):
+    if trigger_workflow(repo, workflow, branch, tags):
         workflow_url = get_latest_workflow_run(repo, branch) or "Not found"
         print(f"🌐 {repo} Workflow URL: {workflow_url}")
 

@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "*/10 * * * *"  # Runs every 10 mins
   workflow_dispatch:  # Allow manual execution
+    inputs:
+      tags:
+        description: "Tags to execute"
+        default: ""
+        required: false
+  
 
 jobs:
   trigger-workflows:
