@@ -28,6 +28,8 @@ def trigger_workflow(repo, workflow, branch, inputs=None):
             print("❌ Invalid JSON provided in --inputs.")
             return False
 
+    print(payload)
+
     response = requests.post(url, headers=HEADERS, json=payload)
 
     if response.status_code == 204:
