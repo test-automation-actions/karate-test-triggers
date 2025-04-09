@@ -1,13 +1,13 @@
 import os
 import time
+import json
 import requests
 import argparse
-import json
 
 # GitHub API URL
 GITHUB_API_URL = "https://api.github.com"
 
-# GitHub Token (export this in your shell or GitHub Action env)
+# GitHub Token
 TOKEN = os.getenv("GITHUB_TOKEN")
 HEADERS = {
     "Accept": "application/vnd.github+json",
@@ -16,12 +16,17 @@ HEADERS = {
 
 
 def trigger_workflow(repo, workflow, branch, inputs=None):
-    """Triggers a workflow dispatch event for the given repository."""
+    """Triggers a workflow dispatch event for the given repository with optional inputs."""
     url = f"{GITHUB_API_URL}/repos/{repo}/actions/workflows/{workflow}/dispatches"
-    payload = {
-        "ref": branch,
-        "inputs": inputs or {}
-    }
+    payload = {"ref": branch}
+    
+    if inputs:
+        try:
+            inputs_json = json.loads(inputs)
+            payload["inputs"] = inputs_json
+        except json.JSONDecodeError:
+            print("❌ Invalid JSON provided in --inputs.")
+            return False
 
     response = requests.post(url, headers=HEADERS, json=payload)
 
@@ -52,27 +57,21 @@ def get_latest_workflow_run(repo, branch):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Trigger GitHub workflow and fetch the run URL.")
+    parser = argparse.ArgumentParser(description="Trigger GitHub workflow with inputs and fetch the run URL.")
     parser.add_argument("--repo", required=True, help="GitHub repository (e.g., user/repo-name)")
     parser.add_argument("--workflow", required=True, help="Workflow file name (e.g., test-execution.yml)")
-    parser.add_argument("--branch", required=True, help="Branch or reference to trigger (e.g., main or develop)")
-    parser.add_argument("--inputs", help="Inputs to pass to the workflow (JSON string)")
+    parser.add_argument("--branch", required=True, help="Branch to trigger (e.g., main)")
+    parser.add_argument("--inputs", required=False, help="JSON string of workflow inputs (e.g., '{\"tags\": \"smoke\"}')")
 
     args = parser.parse_args()
+    if trigger_workflow(args.repo, args.workflow, args.branch, args.inputs):
+        workflow_url = get_latest_workflow_run(args.repo, args.branch) or "Not found"
+        print(f"🌐 {args.repo} Workflow URL: {workflow_url}")
 
-    repo = args.repo
-    workflow = args.workflow
-    branch = args.branch
-    inputs = json.loads(args.inputs) if args.inputs else None
-
-    if trigger_workflow(repo, workflow, branch, inputs):
-        workflow_url = get_latest_workflow_run(repo, branch) or "Not found"
-        print(f"🌐 {repo} Workflow URL: {workflow_url}")
-
-        # Save to GitHub environment variable if in Actions
-        if os.getenv("GITHUB_ENV"):
-            repo_key = repo.split("/")[-1].replace("-", "_").upper()
-            with open(os.getenv("GITHUB_ENV"), "a") as env_file:
+        repo_key = args.repo.split("/")[-1].replace("-", "_").upper()
+        github_env = os.getenv("GITHUB_ENV")
+        if github_env:
+            with open(github_env, "a") as env_file:
                 env_file.write(f"{repo_key}_URL={workflow_url}\n")
 
 
