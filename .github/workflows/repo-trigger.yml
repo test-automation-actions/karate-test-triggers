@@ -1,8 +1,8 @@
 name: Trigger to karate-test-demo "list-variable" workflow
 
 on:
-  schedule:
-    - cron: "*/10 * * * *"  # Runs every 10 mins
+  # schedule:
+  #   - cron: "*/10 * * * *"  # Runs every 10 mins
   workflow_dispatch:  # Allow manual execution
 
 jobs:
