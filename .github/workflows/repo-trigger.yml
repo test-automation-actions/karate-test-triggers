@@ -25,7 +25,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
-          python .github/workflows/scripts/trigger_workflows_updated.py --repo "test-automation-actions/karate-test-demo" --workflow "test-execution.yml" --branch "develop" --inputs '{"tags": "1,2,3"}'
+          python .github/workflows/scripts/trigger_workflows_updated.py --repo "test-automation-actions/karate-test-demo" --workflow "list-variable.yml" --branch "develop" --inputs '{"tags": "1,2,3"}'
 
       - name: Display Triggered Workflow URLs
         run: |
